@@ -23,38 +23,29 @@ db.connect((err) => {
 });
 
 // ---------- LOGIN (Admin / Student) ----------
-app.post("/login", (req, res) => {
-  const { username, password, role } = req.body;
+function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!username || !password) return showError("Please fill all fields!");
 
-  if (role === "admin") {
-    const sql = "SELECT * FROM admin WHERE username=? AND password=?";
-    db.query(sql, [username, password], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: "DB Error" });
-      if (result.length > 0) {
-        res.json({ success: true, role: "admin", message: "Admin login successful" });
+  fetch(`${API}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, role }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("role", role);
+        window.location = "dashboard.html";
       } else {
-        res.json({ success: false, message: "Invalid admin credentials" });
+        showError(data.message || "Invalid username or password!");
       }
-    });
-  } else if (role === "student") {
-    const sql = "SELECT * FROM students WHERE username=? AND password=?";
-    db.query(sql, [username, password], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: "DB Error" });
-      if (result.length > 0) {
-        res.json({
-          success: true,
-          role: "student",
-          studentName: result[0].username,
-          message: "Student login successful",
-        });
-      } else {
-        res.json({ success: false, message: "Invalid student credentials" });
-      }
-    });
-  } else {
-    res.json({ success: false, message: "Invalid role selected" });
-  }
-});
+    })
+    .catch(() => showError("Server error"));
+}
+
 
 // ---------- FETCH ALL BOOKS ----------
 app.get("/books", (req, res) => {
