@@ -22,29 +22,34 @@ db.connect((err) => {
   console.log("✅ MySQL Connected!");
 });
 
-// ---------- LOGIN (Admin / Student) ----------
-function login() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-  if (!username || !password) return showError("Please fill all fields!");
+// ---------- LOGIN API ----------
+app.post("/login", (req, res) => {
+  const { username, password, role } = req.body;
 
-  fetch(`${API}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password, role }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("role", role);
-        window.location = "dashboard.html";
-      } else {
-        showError(data.message || "Invalid username or password!");
-      }
-    })
-    .catch(() => showError("Server error"));
-}
+  if (!username || !password || !role) {
+    return res.status(400).json({ success: false, message: "Missing credentials" });
+  }
+
+  const table = role === "admin" ? "admin" : "students"; // ✅ match your DB table
+
+  const sql = `SELECT * FROM ${table} WHERE username=? AND password=?`;
+  db.query(sql, [username, password], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+
+    if (result.length > 0) {
+      const name = result[0].username;
+      return res.json({ success: true, role, studentName: name });
+    } else {
+      return res.json({ success: false, message: "Invalid username or password" });
+    }
+  });
+});
+
+
+
 
 
 // ---------- FETCH ALL BOOKS ----------
@@ -140,17 +145,31 @@ app.put("/return/:id", (req, res) => {
 
 // ---------- VIEW ISSUED BOOKS ----------
 app.get("/issued", (req, res) => {
-  const query = `
+  const { student_name, role } = req.query; // read from query params
+
+  let query = `
     SELECT ib.id, b.title, ib.student_name, ib.issue_date, ib.return_date, ib.status
     FROM issued_books ib
     JOIN books b ON ib.book_id = b.id
-    ORDER BY ib.id DESC
   `;
-  db.query(query, (err, result) => {
-    if (err) return res.status(500).json({ success: false, message: "Error fetching issued books" });
-    res.json(result);
-  });
+
+  // 🔹 If student, filter by their name
+  if (role === "student" && student_name) {
+    query += " WHERE ib.student_name = ?";
+    db.query(query, [student_name], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: "Error fetching issued books" });
+      res.json(result);
+    });
+  } else {
+    // 🔹 Admin gets all issued books
+    query += " ORDER BY ib.id DESC";
+    db.query(query, (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: "Error fetching issued books" });
+      res.json(result);
+    });
+  }
 });
+
 
 // ---------- START SERVER ----------
 const PORT = process.env.PORT || 4000;
