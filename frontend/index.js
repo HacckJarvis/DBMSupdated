@@ -23,10 +23,10 @@ function login() {
 
   const endpoint = role === "admin" ? "/login" : "/student-login";
 
-  fetch(`${API}${endpoint}`, {
+  fetch(`${API}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password,role }),
   })
     .then((res) => res.json())
     .then((data) => {
