@@ -159,7 +159,8 @@ function issueBook(bookId) {
 
 // ---------- LOAD ISSUED BOOKS ----------
 function loadIssuedBooks() {
-  fetch(`${API}/issued`)
+  fetch(`${API}/issued?student_name=${encodeURIComponent(localStorage.getItem("studentName") || "")}&role=${role}`)
+
     .then((res) => res.json())
     .then((data) => {
       const tbody = document.querySelector("#issuedTable tbody");
