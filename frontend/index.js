@@ -21,21 +21,26 @@ function login() {
   const password = document.getElementById("password").value.trim();
   if (!username || !password) return showError("Please fill all fields!");
 
-  const endpoint = role === "admin" ? "/login" : "/student-login";
-
   fetch(`${API}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password,role }),
+    body: JSON.stringify({ username, password, role }),
   })
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("role", role);
-        window.location = "dashboard.html";
+
+        // Store student name for issuing books
+        if (role === "student") {
+          localStorage.setItem("studentName", data.studentName);
+        }
+
+        showSuccess("Login successful!");
+        setTimeout(() => (window.location = "dashboard.html"), 1000);
       } else {
-        showError("Invalid username or password!");
+        showError(data.message || "Invalid username or password!");
       }
     })
     .catch(() => showError("Server error"));
