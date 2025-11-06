@@ -1,12 +1,27 @@
 CREATE DATABASE IF NOT EXISTS library_db;
 USE library_db;
-
+----------- Login -----------
 CREATE TABLE IF NOT EXISTS admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL
 );
 
+INSERT INTO admin (username, password) VALUES 
+('admin', 'admin123'),
+('aditya','aditya123');
+
+CREATE TABLE IF NOT EXISTS students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+
+INSERT INTO students (username, password) VALUES
+('adi', 'adi123');
+
+-------------- add books -------------
 CREATE TABLE IF NOT EXISTS books (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -15,16 +30,25 @@ CREATE TABLE IF NOT EXISTS books (
     copies INT DEFAULT 1
 );
 
-INSERT INTO admin (username, password) VALUES 
-('admin', 'admin123'),
-('aditya','aditya123');
-
 INSERT INTO books (title, author, isbn, copies) VALUES
 ('Harry Potter', 'J.K. Rowling', '9780439708180', 5),
 ('The Alchemist', 'Paulo Coelho', '9780061122415', 3),
 ('1984', 'George Orwell', '9780451524935', 4);
 
+------- issued books---------
+CREATE TABLE IF NOT EXISTS issued_books (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  book_id INT NOT NULL,
+  student_name VARCHAR(100),
+  issue_date DATE DEFAULT (CURRENT_DATE),
+  return_date DATE,
+  status ENUM('Issued', 'Returned') DEFAULT 'Issued',
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'asps1234';
 FLUSH PRIVILEGES;
 
-select * from library_db;
+select * from issued_books;
+
+show tables;
