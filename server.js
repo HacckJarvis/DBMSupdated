@@ -94,29 +94,37 @@ app.delete("/books/:id", (req, res) => {
 app.post("/issue", (req, res) => {
   const { book_id, student_name } = req.body;
 
-  // Check availability
-  const checkCopies = "SELECT copies FROM books WHERE id=?";
-  db.query(checkCopies, [book_id], (err, result) => {
-    if (err) return res.status(500).json({ success: false, message: "Error checking book" });
+  // Get student ID
+  const getStudentId = "SELECT id FROM students WHERE username = ?";
+  db.query(getStudentId, [student_name], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: "Error finding student" });
+    if (result.length === 0) return res.json({ success: false, message: "Student not found" });
 
-    if (result.length === 0)
-      return res.json({ success: false, message: "Book not found" });
-    if (result[0].copies <= 0)
-      return res.json({ success: false, message: "No copies available" });
+    const student_id = result[0].id;
 
-    const issueBook = `
-      INSERT INTO issued_books (book_id, student_name, status, issue_date)
-      VALUES (?, ?, 'Issued', CURRENT_DATE)
-    `;
-    db.query(issueBook, [book_id, student_name], (err2) => {
-      if (err2) return res.status(500).json({ success: false, message: "Error issuing book" });
+    // Check availability
+    const checkCopies = "SELECT copies FROM books WHERE id=?";
+    db.query(checkCopies, [book_id], (err2, result2) => {
+      if (err2) return res.status(500).json({ success: false, message: "Error checking book" });
+      if (result2.length === 0) return res.json({ success: false, message: "Book not found" });
+      if (result2[0].copies <= 0) return res.json({ success: false, message: "No copies available" });
 
-      const updateCopies = "UPDATE books SET copies = copies - 1 WHERE id=?";
-      db.query(updateCopies, [book_id]);
-      res.json({ success: true, message: "Book issued successfully" });
+      // Insert issue record with student_id
+      const issueBook = `
+        INSERT INTO issued_books (book_id, student_id, student_name, status, issue_date)
+        VALUES (?, ?, ?, 'Issued', CURRENT_DATE)
+      `;
+      db.query(issueBook, [book_id, student_id, student_name], (err3) => {
+        if (err3) return res.status(500).json({ success: false, message: "Error issuing book" });
+
+        const updateCopies = "UPDATE books SET copies = copies - 1 WHERE id=?";
+        db.query(updateCopies, [book_id]);
+        res.json({ success: true, message: "Book issued successfully" });
+      });
     });
   });
 });
+
 
 // ---------- RETURN BOOK ----------
 app.put("/return/:id", (req, res) => {
@@ -148,7 +156,7 @@ app.get("/issued", (req, res) => {
   const { student_name, role } = req.query; // read from query params
 
   let query = `
-    SELECT ib.id, b.title, ib.student_name, ib.issue_date, ib.return_date, ib.status
+    SELECT ib.id, ib.student_id, b.title, ib.student_name, ib.issue_date, ib.return_date, ib.status
     FROM issued_books ib
     JOIN books b ON ib.book_id = b.id
   `;
