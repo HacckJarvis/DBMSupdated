@@ -18,6 +18,7 @@ privileges.
 -   Edit existing book details\
 -   Delete books from the library\
 -   View all issued books
+-   return the student issued books
 
 ### 🎓 Student
 
@@ -25,7 +26,6 @@ privileges.
 -   View all available books\
 -   Issue books directly from the dashboard\
 -   View only their issued books\
--   Return books they have issued
 
 ------------------------------------------------------------------------
 
@@ -102,6 +102,7 @@ Open `index.html` in your browser.
   Admin     admin      admin123
   Admin     aditya     aditya123
   Student   adi        adi123
+  Student   harshi     harshi123
 
 ------------------------------------------------------------------------
 
@@ -173,5 +174,5 @@ Open `index.html` in your browser.
 -   Ensure MySQL service is running before starting the server.
 -   For testing, run both backend (`node server.js`) and frontend (open
     `index.html` in browser).
--   This version doesn't include a unique `student_id`; it tracks issued
+-   This version include a unique `student_id`; it tracks issued
     books by `student_name`.
