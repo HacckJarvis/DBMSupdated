@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS students (
 
 
 INSERT INTO students (username, password) VALUES
-('adi', 'adi123');
+('adi', 'adi123'),
+('harshi','harshi123');
 
 -------------- add books -------------
 CREATE TABLE IF NOT EXISTS books (
@@ -49,6 +50,6 @@ CREATE TABLE IF NOT EXISTS issued_books (
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'asps1234';
 FLUSH PRIVILEGES;
 
-select * from issued_books;
-
-show tables;
+ALTER TABLE issued_books ADD COLUMN student_id INT AFTER book_id;
+ALTER TABLE issued_books
+ADD CONSTRAINT fk_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE;
