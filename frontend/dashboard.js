@@ -134,7 +134,8 @@ function editBook(id, title, author, isbn, copies) {
 
 // ---------- ISSUE BOOK ----------
 function issueBook(bookId) {
-  if (role !== "student") return Swal.fire("Error", "Only students can issue books!", "error");
+  if (role !== "student")
+    return Swal.fire("Error", "Only students can issue books!", "error");
 
   fetch(`${API}/issue`, {
     method: "POST",
@@ -159,8 +160,11 @@ function issueBook(bookId) {
 
 // ---------- LOAD ISSUED BOOKS ----------
 function loadIssuedBooks() {
-  fetch(`${API}/issued?student_name=${encodeURIComponent(localStorage.getItem("studentName") || "")}&role=${role}`)
-
+  fetch(
+    `${API}/issued?student_name=${encodeURIComponent(
+      localStorage.getItem("studentName") || ""
+    )}&role=${role}`
+  )
     .then((res) => res.json())
     .then((data) => {
       const tbody = document.querySelector("#issuedTable tbody");
@@ -168,7 +172,8 @@ function loadIssuedBooks() {
       data.forEach((item) => {
         tbody.innerHTML += `
           <tr>
-            <td>${item.id}</td>
+            <tbody></tbody>
+            <td>${item.student_id}</td>
             <td>${item.title}</td>
             <td>${item.student_name}</td>
             <td>${item.issue_date}</td>
@@ -176,7 +181,7 @@ function loadIssuedBooks() {
             <td>${item.status}</td>
             <td>
               ${
-                role === "student" && item.status === "Issued"
+                role === "admin" && item.status === "Issued"
                   ? `<button onclick="returnBook(${item.id})">🔙 Return</button>`
                   : "-"
               }
@@ -188,6 +193,9 @@ function loadIssuedBooks() {
 
 // ---------- RETURN BOOK ----------
 function returnBook(id) {
+  if (role !== "admin")
+    return Swal.fire("Error", "Only admins can return books!", "error");
+
   fetch(`${API}/return/${id}`, { method: "PUT" })
     .then((res) => res.json())
     .then(() => {
@@ -212,7 +220,11 @@ function adjustUIForRole() {
     if (formSection) formSection.style.display = "none";
 
     document.querySelectorAll("button").forEach((btn) => {
-      if (btn.textContent.includes("Add") || btn.textContent.includes("Delete") || btn.textContent.includes("Edit")) {
+      if (
+        btn.textContent.includes("Add") ||
+        btn.textContent.includes("Delete") ||
+        btn.textContent.includes("Edit")
+      ) {
         btn.style.display = "none";
       }
     });
